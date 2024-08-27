@@ -199,6 +199,12 @@ namespace TriInspector
                         return false;
                     }
                 }
+                
+                if (TriPropertyOverrideAvailability.Current != null &&
+                    TriPropertyOverrideAvailability.Current.TryIsEnable(this, out var isEnable))
+                {
+                    return isEnable;
+                }
 
                 return true;
             }

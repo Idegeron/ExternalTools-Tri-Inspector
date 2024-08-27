@@ -1,12 +1,10 @@
-# Tri Inspector [![Github license](https://img.shields.io/github/license/codewriter-packages/Tri-Inspector.svg?style=flat-square)](#) [![Unity 2020.3](https://img.shields.io/badge/Unity-2020.3+-2296F3.svg?style=flat-square)](#) ![GitHub package.json version](https://img.shields.io/github/package-json/v/codewriter-packages/Tri-Inspector?style=flat-square) [![openupm](https://img.shields.io/npm/v/com.codewriter.triinspector?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.codewriter.triinspector/)
+# Tri Inspector FLEX![Flexus Icon 32x32](https://github.com/user-attachments/assets/e30ed8cf-873b-4908-8d69-67cba5c70221)S Edition [![Github license](https://img.shields.io/github/license/codewriter-packages/Tri-Inspector.svg?style=flat-square)](#) [![Unity 2020.3](https://img.shields.io/badge/Unity-2020.3+-2296F3.svg?style=flat-square)](#)
 
 _Advanced inspector attributes for Unity_
 
 ![Tri-Inspector-Demo](https://user-images.githubusercontent.com/26966368/187032895-8c41295b-dd82-40ad-80c3-1efaad202732.png)
 
 - [How to Install](#How-to-Install)
-- [Roadmap](#Roadmap-)
-- [Samples](#Samples)
 - [Attributes](#Attributes)
     - [Misc](#Misc)
     - [Validation](#Validation)
@@ -17,29 +15,13 @@ _Advanced inspector attributes for Unity_
     - [Buttons](#Buttons)
     - [Debug](#Debug)
     - [Groups](#Groups)
-- [Integrations](#Integrations)
-    - [Odin Inspector](#Odin-Inspector)
-    - [Odin Validator](#Odin-Validator)
 - [License](#License)
+- [Based On](#Based-On)
 
 ## How to Install
 
 Library distributed as git package ([How to install package from git URL](https://docs.unity3d.com/Manual/upm-ui-giturl.html))
-<br>Git URL: `https://github.com/codewriter-packages/Tri-Inspector.git`
-
-> **Localization package dependency**<br/>
-> Tri Inspector automatically installs [Localization package](https://docs.unity3d.com/Packages/com.unity.localization@1.0/manual/index.html) as dependency.<br/>
-> If you are not using localization package and do not want to install it, you can install a stub package instead.<br/>
-> Git URL: https://github.com/codewriter-packages/Unity-Localization-Stub-for-Tri-Inspector.git
-
-## Roadmap ![GitHub Repo stars](https://img.shields.io/github/stars/codewriter-packages/Tri-Inspector?style=social)
-Each star ★ on the project page brings new features closer. 
-You can suggest new features in the [Discussions](https://github.com/codewriter-packages/Tri-Inspector/discussions).
-
-## Samples
-
-TriInspector has built-in samples at `Tools/Tri Inspector/Samples` menu.
-![Samples](https://user-images.githubusercontent.com/26966368/177045336-a3fcf438-3e70-45d0-b753-299e577b2010.png)
+<br>Git URL: `https://github.com/Idegeron/Tri-Inspector-Flexus-Edition.git`
 
 ## Attributes
 
@@ -727,29 +709,10 @@ public class VerticalGroupSample : ScriptableObject
     public void ButtonB() { }
 }
 ```
-
-## Integrations
-
-### Odin Inspector
-
-Tri Inspector is able to work in compatibility mode with Odin Inspector. 
-In this mode, the primary interface will be drawn by the Odin Inspector. However, 
-parts of the interface can be rendered by the Tri Inspector.
-
-In order for the interface to be rendered by Tri instead of Odin, 
-it is necessary to mark classes with `[DrawWithTriInspector]` attribute.
-
-Alternatively, you can mark the entire assembly with an attribute `[assembly:DrawWithTriInspector]`
-to draw all types in the assembly using the Tri Inspector.
-
-### Odin Validator
-
-Tri Inspector is integrated with the Odin Validator
-so all validation results from Tri attributes will be shown 
-in the Odin Validator window.
-
-![Odin-Validator-Integration](https://user-images.githubusercontent.com/26966368/169645537-d8f0b50f-46af-4804-95e8-337ff3b5ae83.png)
-
 ## License
 
-Tri-Inspector is [MIT licensed](./LICENSE.md).
+Flexus Inspector is [MIT licensed](./LICENSE.md).
+
+## Based On
+
+This project is based on the [Tri-Inspector](https://github.com/codewriter-packages/Tri-Inspector) repository. Special thanks to the original authors for providing a great foundation.

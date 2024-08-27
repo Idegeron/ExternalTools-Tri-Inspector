@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.Serialization;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -178,6 +179,11 @@ namespace TriInspector.Utilities
             if (type.GetConstructor(Type.EmptyTypes) != null)
             {
                 return Activator.CreateInstance(type);
+            }
+
+            if (type.IsSerializable)
+            {
+                return FormatterServices.GetUninitializedObject(type);
             }
 
             return null;
