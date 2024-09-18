@@ -41,7 +41,7 @@ namespace TriInspector.Utilities
             public ReferenceTypeDropDown(TriProperty property, AdvancedDropdownState state) : base(state)
             {
                 _property = property;
-                minimumSize = new Vector2(0, 120);
+                minimumSize = new Vector2(0, 310);
             }
 
             protected override AdvancedDropdownItem BuildRoot()

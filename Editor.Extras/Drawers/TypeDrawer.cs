@@ -51,7 +51,7 @@ namespace TriInspector.Drawers
             {
                 _propertyValue = propertyValue;
                 
-                minimumSize = new Vector2(0, 120);
+                minimumSize = new Vector2(0, 310);
             }
 
             protected override AdvancedDropdownItem BuildRoot()
