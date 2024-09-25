@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace TriInspector.Utilities
 {
@@ -14,13 +15,22 @@ namespace TriInspector.Utilities
                 return niceName;
             }
 
-            niceName = type.Name;
+            var typeNameAttribute = type.GetCustomAttribute<TypeNameAttribute>();
 
-            while (type.DeclaringType != null)
+            if (typeNameAttribute != null)
             {
-                niceName = type.DeclaringType.Name + "." + niceName;
+                niceName = typeNameAttribute.Name;
+            }
+            else
+            {
+                niceName = type.Name;
 
-                type = type.DeclaringType;
+                while (type.DeclaringType != null)
+                {
+                    niceName = type.DeclaringType.Name + "." + niceName;
+
+                    type = type.DeclaringType;
+                }
             }
 
             TypeNiceNames[type] = niceName;

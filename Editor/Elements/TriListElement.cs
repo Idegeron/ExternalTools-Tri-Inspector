@@ -18,7 +18,9 @@ namespace TriInspector.Elements
         private readonly TriProperty _property;
         private readonly ReorderableList _reorderableListGui;
         private readonly bool _alwaysExpanded;
-        private readonly bool _showElementLabels;
+        private readonly bool _alwaysElementsExpanded;
+        private readonly Color _oddElementColor;
+        private readonly Color _eventElementColor;
 
         private float _lastContentWidth;
 
@@ -30,7 +32,9 @@ namespace TriInspector.Elements
 
             _property = property;
             _alwaysExpanded = settings?.AlwaysExpanded ?? false;
-            _showElementLabels = settings?.ShowElementLabels ?? false;
+            _alwaysElementsExpanded = settings?.AlwaysElementsExpanded ?? false;
+            _oddElementColor = settings?.OddElementColor ?? new Color(0.25f, 0.25f, 0.25f, 1f);
+            _eventElementColor = settings?.EvenElementColor ?? new Color(0.2f, 0.2f, 0.2f, 1f);
             _reorderableListGui = new ReorderableList(null, _property.ArrayElementType)
             {
                 draggable = settings?.Draggable ?? true,
@@ -39,6 +43,7 @@ namespace TriInspector.Elements
                 drawHeaderCallback = DrawHeaderCallback,
                 elementHeightCallback = ElementHeightCallback,
                 drawElementCallback = DrawElementCallback,
+                drawElementBackgroundCallback = DrawElementBackgroundCallback,
                 onAddCallback = AddElementCallback,
                 onRemoveCallback = RemoveElementCallback,
                 onReorderCallbackWithDetails = ReorderCallback,
@@ -287,7 +292,7 @@ namespace TriInspector.Elements
         {
             return new TriPropertyElement(property, new TriPropertyElement.Props
             {
-                forceInline = !_showElementLabels,
+                forceInline = _alwaysElementsExpanded,
             });
         }
 
@@ -349,7 +354,18 @@ namespace TriInspector.Elements
 
             using (TriPropertyOverrideContext.BeginOverride(ListPropertyOverrideContext.Instance))
             {
-                GetChild(index).OnGUI(rect);
+                GetChild(index).OnGUI(new Rect(rect)
+                {
+                    y = rect.y + 5
+                });
+            }
+        }
+        
+        private void DrawElementBackgroundCallback(Rect rect, int index, bool isActive, bool isFocused)
+        {
+            if (_reorderableListGui.count > 0)
+            {
+                EditorGUI.DrawRect(rect, index % 2 == 0 ? _oddElementColor : _eventElementColor);
             }
         }
 
@@ -360,7 +376,7 @@ namespace TriInspector.Elements
                 return EditorGUIUtility.singleLineHeight;
             }
 
-            return GetChild(index).GetHeight(_lastContentWidth);
+            return GetChild(index).GetHeight(_lastContentWidth) + 10;
         }
 
         private static object CreateDefaultElementValue(TriProperty property)

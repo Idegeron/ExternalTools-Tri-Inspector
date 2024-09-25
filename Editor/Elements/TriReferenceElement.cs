@@ -75,12 +75,12 @@ namespace TriInspector.Elements
             var headerLabelRect = new Rect(position)
             {
                 height = headerRect.height,
-                width = EditorGUIUtility.labelWidth,
+                width = (!string.IsNullOrEmpty(_property.DisplayNameContent.text) ? EditorGUIUtility.labelWidth : 20),
             };
             var headerFieldRect = new Rect(position)
             {
                 height = headerRect.height,
-                xMin = headerRect.xMin + EditorGUIUtility.labelWidth,
+                xMin = headerRect.xMin + (!string.IsNullOrEmpty(_property.DisplayNameContent.text) ? EditorGUIUtility.labelWidth : 17),
             };
             var contentRect = new Rect(position)
             {
