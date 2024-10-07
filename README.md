@@ -1,4 +1,4 @@
-# Tri Inspector FLEX![Flexus Icon 32x32](https://github.com/user-attachments/assets/e30ed8cf-873b-4908-8d69-67cba5c70221)S Edition [![Github license](https://img.shields.io/github/license/codewriter-packages/Tri-Inspector.svg?style=flat-square)](#) [![Unity 2020.3](https://img.shields.io/badge/Unity-2020.3+-2296F3.svg?style=flat-square)](#)
+# FLEX![Flexus Icon 32x32](https://github.com/user-attachments/assets/e30ed8cf-873b-4908-8d69-67cba5c70221)S Tri Inspector [![Github license](https://img.shields.io/github/license/codewriter-packages/Tri-Inspector.svg?style=flat-square)](#) [![Unity 2020.3](https://img.shields.io/badge/Unity-2020.3+-2296F3.svg?style=flat-square)](#)
 
 _Advanced inspector attributes for Unity_
 
@@ -21,7 +21,7 @@ _Advanced inspector attributes for Unity_
 ## How to Install
 
 Library distributed as git package ([How to install package from git URL](https://docs.unity3d.com/Manual/upm-ui-giturl.html))
-<br>Git URL: `https://github.com/Idegeron/Tri-Inspector-Flexus-Edition.git`
+<br>Git URL: `https://github.com/Idegeron/Flexus-Tri-Inspector.git`
 
 ## Attributes
 

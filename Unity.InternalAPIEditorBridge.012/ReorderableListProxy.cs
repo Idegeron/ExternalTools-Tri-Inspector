@@ -46,8 +46,6 @@ namespace TriInspectorUnityInternalBridge
 
             headerRect.xMin += 6f;
             headerRect.xMax -= 6f;
-            headerRect.height -= 2f;
-            headerRect.y += 1;
 
             list.drawHeaderCallback?.Invoke(headerRect);
         }

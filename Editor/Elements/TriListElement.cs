@@ -33,8 +33,8 @@ namespace TriInspector.Elements
             _property = property;
             _alwaysExpanded = settings?.AlwaysExpanded ?? false;
             _alwaysElementsExpanded = settings?.AlwaysElementsExpanded ?? false;
-            _oddElementColor = settings?.OddElementColor ?? new Color(0.25f, 0.25f, 0.25f, 1f);
-            _eventElementColor = settings?.EvenElementColor ?? new Color(0.2f, 0.2f, 0.2f, 1f);
+            _oddElementColor = EditorGUIUtility.isProSkin ? new Color(0.25f, 0.25f, 0.25f, 1f) : new Color(0.8f, 0.8f, 0.8f, 1f);
+            _eventElementColor = EditorGUIUtility.isProSkin ? new Color(0.2f, 0.2f, 0.2f, 1f) : new Color(0.75f, 0.75f, 0.75f, 1f);
             _reorderableListGui = new ReorderableList(null, _property.ArrayElementType)
             {
                 draggable = settings?.Draggable ?? true,
@@ -102,7 +102,7 @@ namespace TriInspector.Elements
         {
             if (!_property.IsExpanded)
             {
-                return _reorderableListGui.headerHeight + 4f;
+                return _reorderableListGui.headerHeight;
             }
 
             _lastContentWidth = width;
@@ -116,7 +116,7 @@ namespace TriInspector.Elements
             {
                 ReorderableListProxy.DoListHeader(_reorderableListGui, new Rect(position)
                 {
-                    yMax = position.yMax - 4,
+                    height = _reorderableListGui.headerHeight,
                 });
                 return;
             }
@@ -354,10 +354,7 @@ namespace TriInspector.Elements
 
             using (TriPropertyOverrideContext.BeginOverride(ListPropertyOverrideContext.Instance))
             {
-                GetChild(index).OnGUI(new Rect(rect)
-                {
-                    y = rect.y + 5
-                });
+                GetChild(index).OnGUI(new Rect(rect));
             }
         }
         
@@ -376,7 +373,7 @@ namespace TriInspector.Elements
                 return EditorGUIUtility.singleLineHeight;
             }
 
-            return GetChild(index).GetHeight(_lastContentWidth) + 10;
+            return GetChild(index).GetHeight(_lastContentWidth);
         }
 
         private static object CreateDefaultElementValue(TriProperty property)

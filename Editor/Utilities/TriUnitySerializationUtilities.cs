@@ -181,7 +181,7 @@ namespace TriInspector.Utilities
                 return Activator.CreateInstance(type);
             }
 
-            if (type.IsSerializable)
+            if (type.IsSerializable && !type.IsAbstract)
             {
                 return FormatterServices.GetUninitializedObject(type);
             }

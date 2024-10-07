@@ -50,11 +50,11 @@ namespace TriInspector.Elements
 
         public override float GetHeight(float width)
         {
-            var height = _skipReferencePickerExtraLine ? 0f : EditorGUIUtility.singleLineHeight;
+            var height = (_skipReferencePickerExtraLine ? 0f : EditorGUIUtility.singleLineHeight);
 
             if (_props.inline || _property.IsExpanded)
             {
-                height += base.GetHeight(width);
+                height += base.GetHeight(width) + 10;
             }
 
             return height;
@@ -71,6 +71,7 @@ namespace TriInspector.Elements
             var headerRect = new Rect(position)
             {
                 height = _skipReferencePickerExtraLine ? 0f : EditorGUIUtility.singleLineHeight,
+                //y = position.y + 2
             };
             var headerLabelRect = new Rect(position)
             {
@@ -80,11 +81,13 @@ namespace TriInspector.Elements
             var headerFieldRect = new Rect(position)
             {
                 height = headerRect.height,
+                //y = headerRect.y,
                 xMin = headerRect.xMin + (!string.IsNullOrEmpty(_property.DisplayNameContent.text) ? EditorGUIUtility.labelWidth : 17),
             };
             var contentRect = new Rect(position)
             {
-                yMin = position.yMin + headerRect.height,
+                yMin = position.yMin + headerRect.height + 5,
+                yMax = position.yMax - 5
             };
 
             if (_props.inline)

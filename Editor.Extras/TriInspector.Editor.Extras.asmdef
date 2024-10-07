@@ -4,7 +4,8 @@
     "references": [
         "TriInspector",
         "TriInspector.Editor",
-        "Unity.InternalAPIEditorBridge.013"
+        "Unity.InternalAPIEditorBridge.013",
+        "Flexus.Serialization"
     ],
     "includePlatforms": [
         "Editor"
@@ -13,7 +14,7 @@
     "allowUnsafeCode": false,
     "overrideReferences": true,
     "precompiledReferences": [],
-    "autoReferenced": false,
+    "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [],
     "noEngineReferences": false
