@@ -19,7 +19,7 @@ namespace TriInspector.Drawers
     {
         public override TriElement CreateElement(TriValue<Dictionary<object, object>> propertyValue, TriElement next)
         {
-            return new DictionaryElement(propertyValue.Property.ChildrenProperties[0]);
+            return new DictionaryElement(propertyValue.Property);
         }
 
         private class DictionaryElement : TriElement
@@ -28,10 +28,14 @@ namespace TriInspector.Drawers
             private const float FooterExtraSpace = 4;
 
             private readonly TriProperty _triProperty;
+            private readonly Type _dictionaryType;
+            private readonly Type _arrayElementType;
             private readonly TriProperty _keyTriProperty;
             private readonly TriProperty _valueTriProperty;
             private readonly TriElement _keyTriElement;
             private readonly TriElement _valueTriElement;
+            private readonly IList _list;
+            private readonly IDictionary _dictionary;
             private readonly ReorderableList _reorderableList;
             private readonly DictionaryTreeView _dictionaryTreeView;
 
@@ -47,7 +51,13 @@ namespace TriInspector.Drawers
             public DictionaryElement(TriProperty triProperty)
             {
                 _triProperty = triProperty;
-                _keyTriProperty = new TriProperty(triProperty.PropertyTree, null, new TriPropertyDefinition(null, null, 0, "Key", _triProperty.ArrayElementType.GenericTypeArguments[0],
+                
+                _dictionaryType = triProperty.Value != null ? triProperty.Value.GetType() : triProperty.ValueType;
+                
+                _arrayElementType = typeof(KeyValuePair<,>).MakeGenericType(_dictionaryType.GetGenericArguments()[0], 
+                    _dictionaryType.GetGenericArguments()[1]);
+
+                _keyTriProperty = new TriProperty(triProperty.PropertyTree, null, new TriPropertyDefinition(null, null, 0, "Key", _arrayElementType.GenericTypeArguments[0],
                     (self, index) => _keyInstance,
                     (self, index, value) =>
                     {
@@ -55,7 +65,8 @@ namespace TriInspector.Drawers
                         return _keyInstance;
                     },
                     null, false), null);
-                _valueTriProperty = new TriProperty(triProperty.PropertyTree, null, new TriPropertyDefinition(null, null, 1, "Value", _triProperty.ArrayElementType.GenericTypeArguments[1],
+                
+                _valueTriProperty = new TriProperty(triProperty.PropertyTree, null, new TriPropertyDefinition(null, null, 1, "Value", _arrayElementType.GenericTypeArguments[1],
                     (self, index) => _valueInstance,
                     (self, index, value) =>
                     {
@@ -63,10 +74,18 @@ namespace TriInspector.Drawers
                         return _valueInstance;
                     },
                     null, false), null);
+                
                 _keyTriElement = new TriPropertyElement(_keyTriProperty);
+                
                 _valueTriElement = new TriPropertyElement(_valueTriProperty);
-                _reorderableList = new ReorderableList(null, _triProperty.ArrayElementType)
+
+                _list = (IList) Activator.CreateInstance(typeof(List<>).MakeGenericType(_arrayElementType));
+
+                _dictionary = (IDictionary) triProperty.Value;
+                
+                _reorderableList = new ReorderableList(null, _arrayElementType)
                 {
+                    list = _list,
                     draggable = false,
                     displayAdd = true,
                     displayRemove = true,
@@ -77,34 +96,23 @@ namespace TriInspector.Drawers
                     onRemoveCallback = RemoveElementCallback,
                     onReorderCallbackWithDetails = ReorderCallback,
                 };
-                _dictionaryTreeView = new DictionaryTreeView(triProperty, this, _reorderableList)
+                
+                _dictionaryTreeView = new DictionaryTreeView(triProperty, this, _list, _reorderableList)
                 {
                     SelectionChangedCallback = SelectionChangedCallback,
                 };
+                
                 _reloadRequired = true;
 
                 _keyTriElement.AttachInternal();
                 _valueTriElement.AttachInternal();
+
+                ReloadList();
             }
 
             public override bool Update()
             {
                 var dirty = false;
-
-                if (_triProperty.TryGetSerializedProperty(out var serializedProperty) && serializedProperty.isArray)
-                {
-                    _reorderableList.serializedProperty = serializedProperty;
-                }
-                else if (_triProperty.Value != null)
-                {
-                    _reorderableList.list = (IList) _triProperty.Value;
-                }
-                else if (_reorderableList.list == null)
-                {
-                    _reorderableList.list = (IList) (_triProperty.FieldType.IsArray
-                        ? Array.CreateInstance(_triProperty.ArrayElementType, 0)
-                        : Activator.CreateInstance(_triProperty.FieldType));
-                }
 
                 if (_triProperty.IsExpanded)
                 {
@@ -240,18 +248,9 @@ namespace TriInspector.Drawers
                     xMin = rect.xMax - 100,
                 };
 
-                var content = _triProperty.Parent.DisplayNameContent;
+                var content = _triProperty.DisplayNameContent;
                     
-                if (_triProperty.TryGetSerializedProperty(out var serializedProperty))
-                {
-                    EditorGUI.BeginProperty(rect, content, serializedProperty);
-                    _triProperty.IsExpanded = EditorGUI.Foldout(rect, _triProperty.IsExpanded, content, true);
-                    EditorGUI.EndProperty();
-                }
-                else
-                {
-                    _triProperty.IsExpanded = EditorGUI.Foldout(rect, _triProperty.IsExpanded, content, true);
-                }
+                _triProperty.IsExpanded = EditorGUI.Foldout(rect, _triProperty.IsExpanded, content, true);
 
                 var label = _reorderableList.count == 0 ? "Empty" : $"{_reorderableList.count} items";
                 
@@ -309,44 +308,15 @@ namespace TriInspector.Drawers
             
             private void RemoveElementCallback(ReorderableList reorderableList)
             {
-                if (_triProperty.TryGetSerializedProperty(out _))
-                {
-                    ReorderableListProxy.defaultBehaviours.DoRemoveButton(reorderableList);
-                    _triProperty.NotifyValueChanged();
-                    return;
-                }
-
-                var template = CloneValue();
                 var ind = reorderableList.index;
 
-                _triProperty.SetValues(targetIndex =>
-                {
-                    var value = (IList) _triProperty.GetValue(targetIndex);
-
-                    if (_triProperty.FieldType.IsArray)
-                    {
-                        var array = Array.CreateInstance(_triProperty.ArrayElementType, template.Length - 1);
-                        Array.Copy(template, 0, array, 0, ind);
-                        Array.Copy(template, ind + 1, array, ind, array.Length - ind);
-                        value = array;
-                    }
-                    else
-                    {
-                        value?.RemoveAt(ind);
-                    }
-
-                    return value;
-                });
+                _dictionary.Remove(_arrayElementType.GetProperty("Key").GetValue(_list[ind]));
+                
+                _list.RemoveAt(ind);
             }
             
             private void ReorderCallback(ReorderableList reorderableList, int oldIndex, int newIndex)
             {
-                if (_triProperty.TryGetSerializedProperty(out _))
-                {
-                    _triProperty.NotifyValueChanged();
-                    return;
-                }
-
                 var mainValue = _triProperty.Value;
 
                 _triProperty.SetValues(targetIndex =>
@@ -380,6 +350,27 @@ namespace TriInspector.Drawers
                     return value;
                 });
             }
+
+            private TriProperty CreteTriProperty(int childIndex)
+            {
+                var triProperty = new TriProperty(_triProperty.PropertyTree, null, new TriPropertyDefinition(null, null,
+                    0, string.Empty, _arrayElementType,
+                    (self, index) => _list[childIndex],
+                    (self, index, value) =>
+                    {
+                        var key = _arrayElementType.GetProperty("Key").GetValue(value);
+                        var newValue = _arrayElementType.GetProperty("Value").GetValue(value);
+
+                        _dictionary[key] = newValue;
+                     
+                        _list[childIndex] = value;
+                        
+                        return value;
+                    },
+                    null, false), null);
+                
+                return triProperty;
+            }
             
             private TriElement CreateItemElement(TriProperty triProperty)
             {
@@ -388,7 +379,7 @@ namespace TriInspector.Drawers
             
             private bool GenerateChildren()
             {
-                var count = _reorderableList.count;
+                var count = _list.Count;
 
                 if (ChildrenCount == count)
                 {
@@ -397,8 +388,7 @@ namespace TriInspector.Drawers
 
                 while (ChildrenCount < count)
                 {
-                    var property = _triProperty.ArrayElementProperties[ChildrenCount];
-                    AddChild(CreateItemElement(property));
+                    AddChild(CreateItemElement(CreteTriProperty(ChildrenCount)));
                 }
 
                 while (ChildrenCount > count)
@@ -425,36 +415,37 @@ namespace TriInspector.Drawers
             {
                 if (!_reloadRequired &&
                     _triProperty.IsExpanded == _isExpanded &&
-                    _triProperty.ArrayElementProperties.Count == _arraySize)
+                    _dictionary.Count == _arraySize)
                 {
                     return false;
                 }
 
+                if (_dictionary.Count != _arraySize)
+                {
+                    ReloadList();
+                    
+                    GenerateChildren();
+                }
+                
                 _reloadRequired = false;
                 _isExpanded = _triProperty.IsExpanded;
-                _arraySize = _triProperty.ArrayElementProperties.Count;
+                _arraySize = _dictionary.Count;
 
                 _dictionaryTreeView.Reload();
-
+                
                 return true;
             }
+
+            private void ReloadList()
+            {
+                _list.Clear();
+                
+                foreach (DictionaryEntry entry in _dictionary)
+                {
+                    _list.Add(Activator.CreateInstance(_arrayElementType, entry.Key, entry.Value));
+                }
+            }
             
-            private object CreateDefaultElementValue()
-            {
-                var canActivate = _triProperty.ArrayElementType.IsValueType ||
-                                  _triProperty.ArrayElementType.GetConstructor(Type.EmptyTypes) != null;
-
-                return canActivate ? Activator.CreateInstance(_triProperty.ArrayElementType) : null;
-            }
-
-            private Array CloneValue()
-            {
-                var list = (IList) _triProperty.Value;
-                var template = Array.CreateInstance(_triProperty.ArrayElementType, list?.Count ?? 0);
-                list?.CopyTo(template, 0);
-                return template;
-            }
-
             private void DisplayAddBlock(Rect position)
             {
                 var keyRect = new Rect(position.xMin + EditorGUIUtility.standardVerticalSpacing, position.yMin + EditorGUIUtility.standardVerticalSpacing * 2, position.width - EditorGUIUtility.standardVerticalSpacing * 2, _keyTriElement.GetHeight(position.width));
@@ -467,12 +458,14 @@ namespace TriInspector.Drawers
                 _keyTriElement.OnGUI(keyRect);
                 _valueTriElement.OnGUI(valueRect);
 
-                GUI.enabled = _keyInstance != null && !((IDictionary)_triProperty.Parent.Value).Contains(_keyInstance);
+                GUI.enabled = _keyInstance != null && !_dictionary.Contains(_keyInstance);
                 
                 if (GUI.Button(buttonDoneRect, "Done"))
                 {
-                    ((IDictionary)_triProperty.Parent.Value).Add(_keyInstance, _valueInstance);
-
+                    _dictionary.Add(_keyInstance, _valueInstance);
+                    
+                    _list.Add(Activator.CreateInstance(_arrayElementType, _keyInstance, _valueInstance));
+                    
                     _keyInstance = default;
                     _valueInstance = default;
                 }
@@ -535,21 +528,28 @@ namespace TriInspector.Drawers
         [Serializable]
         private class DictionaryTreeView : TreeView
         {
+            private const int MaxItemsPerPage = 50;
+            
             private readonly TriProperty _triProperty;
             private readonly TriElement _triElement;
+            private readonly IList _list;
             private readonly ReorderableList _reorderableList;
             private readonly DictionaryTreeItemPropertyOverrideContext _dictionaryTreeItemPropertyOverrideContext;
             private readonly DictionaryTreeItemPropertyOverrideAvailability _dictionaryTreeItemPropertyOverrideAvailability;
 
             private bool _wasRendered;
+            private int _currentPage;
 
+            private int TotalPages => Mathf.CeilToInt((float)_list.Count / MaxItemsPerPage);
+            
             public Action<int> SelectionChangedCallback;
 
-            public DictionaryTreeView(TriProperty triProperty, TriElement triElement, ReorderableList reorderableList)
+            public DictionaryTreeView(TriProperty triProperty, TriElement triElement, IList list, ReorderableList reorderableList)
                 : base(new TreeViewState(), new DictionaryColumnHeader())
             {
                 _triProperty = triProperty;
                 _triElement = triElement;
+                _list = list;
                 _reorderableList = reorderableList;
                 _dictionaryTreeItemPropertyOverrideContext = new DictionaryTreeItemPropertyOverrideContext();
                 _dictionaryTreeItemPropertyOverrideAvailability = new DictionaryTreeItemPropertyOverrideAvailability();
@@ -567,6 +567,30 @@ namespace TriInspector.Drawers
             public void RefreshHeight()
             {
                 RefreshCustomRowHeights();
+            }
+            
+            public override void OnGUI(Rect rect)
+            {
+                base.OnGUI(rect);
+                
+                if (TotalPages > 1)
+                {
+                    var paginationRect = new Rect(rect.xMin, rect.yMax + 5, rect.width, EditorGUIUtility.singleLineHeight);
+
+                    if (GUI.Button(new Rect(paginationRect.xMin, paginationRect.yMin, 50, paginationRect.height), "<") && _currentPage > 0)
+                    {
+                        _currentPage--;
+                        Reload();  
+                    }
+
+                    GUI.Label(new Rect(paginationRect.xMin + 60, paginationRect.yMin, 100, paginationRect.height), $"Page {_currentPage + 1} of {TotalPages}");
+
+                    if (GUI.Button(new Rect(paginationRect.xMin + 170, paginationRect.yMin, 50, paginationRect.height), ">") && _currentPage < TotalPages - 1)
+                    {
+                        _currentPage++;
+                        Reload(); 
+                    }
+                }
             }
 
             protected override void SelectionChanged(IList<int> selectedIds)
@@ -592,15 +616,16 @@ namespace TriInspector.Drawers
 
                 if (_triProperty.IsExpanded)
                 {
-                    for (var index = 0; index < _triProperty.ArrayElementProperties.Count; index++)
-                    {
-                        var rowChildProperty = _triProperty.ArrayElementProperties[index];
-                        
-                        root.AddChild(new DictionaryTreeItem(index, rowChildProperty));
+                    var startIndex = _currentPage * MaxItemsPerPage;
+                    var endIndex = Mathf.Min(startIndex + MaxItemsPerPage, _list.Count);
 
-                        if (index == 0)
+                    for (var index = startIndex; index < endIndex; index++)
+                    {
+                        root.AddChild(new TreeViewItem(index, 0));
+
+                        if (index == startIndex)
                         {
-                            foreach (var kvp in ((DictionaryRowElement) (_triElement.GetChild(0))).TriElements)
+                            foreach (var kvp in ((DictionaryRowElement) (_triElement.GetChild(index - startIndex))).TriElements)
                             {
                                 columns.Add(new MultiColumnHeaderState.Column
                                 {
@@ -636,7 +661,9 @@ namespace TriInspector.Drawers
                 }
 
                 var height = 0f;
-                var rowElement = (DictionaryRowElement) _triElement.GetChild(row);
+                var startIndex = _currentPage * MaxItemsPerPage;
+                var pageIndex = startIndex + row;
+                var rowElement = (DictionaryRowElement) _triElement.GetChild(pageIndex);
 
                 foreach (var visibleColumnIndex in multiColumnHeader.state.visibleColumns)
                 {
@@ -661,9 +688,11 @@ namespace TriInspector.Drawers
                     base.RowGUI(args);
                     return;
                 }
-
-                var rowElement = (DictionaryRowElement) _triElement.GetChild(args.row);
-
+                
+                var startIndex = _currentPage * MaxItemsPerPage;
+                var pageIndex = startIndex + args.row;
+                var rowElement = (DictionaryRowElement) _triElement.GetChild(pageIndex);
+                
                 for (var i = 0; i < multiColumnHeader.state.visibleColumns.Length; i++)
                 {
                     var visibleColumnIndex = multiColumnHeader.state.visibleColumns[i];
@@ -709,17 +738,6 @@ namespace TriInspector.Drawers
         {
             public DictionaryTreeEmptyItem() : base(0, 0, "Table is Empty")
             {
-            }
-        }
-
-        [Serializable]
-        private class DictionaryTreeItem : TreeViewItem
-        {
-            public TriProperty TriProperty { get; }
-            
-            public DictionaryTreeItem(int id, TriProperty triProperty) : base(id, 0)
-            {
-                TriProperty = triProperty;
             }
         }
 
